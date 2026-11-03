@@ -289,4 +289,10 @@ body {
 }
 .prose-docs table { width: 100%; border-collapse: collapse; margin: 8px 0 20px; font-size: 15px; }
 .prose-docs th { text-align: left; font-family: var(--font-pixel); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 9px 10px; border-bottom: 1px solid var(--signal); }
+/* phones: wide tables scroll sideways instead of stretching the page */
+@media (max-width: 767px) {
+  .prose-docs table { display: block; overflow-x: auto; white-space: nowrap; font-size: 14px; }
+  .prose-docs td:last-child { white-space: normal; min-width: 220px; }
+  .prose-docs h2 { font-size: 23px; }
+}
 .prose-docs td { padding: 9px 10px; border-bottom: 1px dashed var(--line); vertical-align: top; color: #d8d0b8; }

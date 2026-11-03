@@ -25,7 +25,7 @@ function SectionHead({ kicker, title, children }: { kicker: string; title: strin
   return (
     <div className="max-w-2xl">
       <p className="kicker">{kicker}</p>
-      <h2 className="mt-3 text-[clamp(34px,5vw,58px)]">{title}</h2>
+      <h2 className="mt-3 text-[clamp(32px,5vw,58px)]">{title}</h2>
       {children ? <p className="mt-3 text-lg text-khaki">{children}</p> : null}
     </div>
   );
@@ -46,10 +46,17 @@ export default function Home() {
       <Nav />
       <main>
         {/* ---------- Hero ---------- */}
-        <section className="scan relative isolate flex min-h-[min(88svh,820px)] items-end overflow-hidden">
-          <div className="pixel drift absolute inset-0 -z-10 bg-cover bg-[62%_30%]" style={{ backgroundImage: "url(/media/frontline.jpg)" }} aria-hidden />
+        <section className="scan relative isolate overflow-hidden md:flex md:min-h-[min(88svh,820px)] md:items-end">
+          {/* phone: the art as a banner on top, uncropped */}
+          <div className="relative md:hidden" aria-hidden>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/media/frontline.jpg" alt="" className="pixel block aspect-[5/3] w-full object-cover object-[72%_center]" />
+            <div className="absolute inset-0 bg-linear-to-t from-bg via-bg/10 to-transparent" />
+            <span className="stamp absolute top-5 right-4 text-sm">NOW RECRUITING</span>
+          </div>
+          <div className="pixel drift absolute inset-0 -z-10 hidden bg-cover bg-[62%_30%] md:block" style={{ backgroundImage: "url(/media/frontline.jpg)" }} aria-hidden />
           <div
-            className="absolute inset-0 -z-10"
+            className="absolute inset-0 -z-10 hidden md:block"
             style={{
               background:
                 "linear-gradient(0deg, var(--bg) 2%, rgba(14,17,11,.75) 38%, rgba(14,17,11,.1) 75%), linear-gradient(90deg, rgba(14,17,11,.85) 0%, rgba(14,17,11,0) 60%)",
@@ -59,17 +66,17 @@ export default function Home() {
           <div className="pointer-events-none absolute top-24 right-[6%] hidden md:block" aria-hidden>
             <span className="stamp">NOW RECRUITING</span>
           </div>
-          <div className="mx-auto w-full max-w-7xl px-5 pt-32 pb-14 sm:pb-20">
+          <div className="mx-auto w-full max-w-7xl px-5 pt-2 pb-12 md:pt-32 md:pb-20">
             <p className="kicker">
               Pixel war MMO <span className="text-khaki">·</span> In development
             </p>
-            <h1 className="mt-4 text-[clamp(64px,13vw,176px)] leading-[0.86] drop-shadow-[0_6px_0_#000]">
+            <h1 className="mt-4 text-[clamp(60px,13vw,176px)] leading-[0.86] drop-shadow-[0_6px_0_#000]">
               SWOL
               <br />
               <span className="text-signal">DIERS</span>
             </h1>
             <p className="mt-6 max-w-xl text-[clamp(17px,1.8vw,20px)] font-medium text-sand/90">{CONFIG.tagline}</p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center">
               <Link href="/whitelist" className="btn">
                 Enlist now →
               </Link>
@@ -90,7 +97,7 @@ export default function Home() {
         {/* ---------- Orders ---------- */}
         <section id="orders" className="relative">
           <div className="grid-bg grid-fade absolute inset-0 -z-10 opacity-60" aria-hidden />
-          <div className="mx-auto max-w-7xl px-5 py-24">
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:py-24">
             <div className="flex flex-wrap items-end justify-between gap-6">
               <SectionHead kicker="Whitelist" title="Your orders">
                 Four missions, all free. Every one moves you up the roster.
@@ -99,15 +106,18 @@ export default function Home() {
                 Start your orders
               </Link>
             </div>
-            <ol className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <ol className="mt-10 grid gap-4 sm:mt-12 sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
               {orders.map((o) => (
-                <li key={o.n} className="hud flex flex-col p-6">
-                  <div className="flex items-start justify-between">
-                    <span className="stencil text-5xl text-line">{o.n}</span>
-                    <span className="chip gold">{o.pts}</span>
+                <li key={o.n} className="hud flex gap-4 p-5 sm:flex-col sm:gap-0 sm:p-6">
+                  <div className="flex shrink-0 items-start justify-between sm:w-full">
+                    <span className="stencil w-14 text-4xl text-line sm:w-auto sm:text-5xl">{o.n}</span>
+                    <span className="chip gold hidden sm:inline-block">{o.pts}</span>
                   </div>
-                  <h3 className="mt-6 text-xl">{o.title}</h3>
-                  <p className="muted mt-2 text-[15px]">{o.text}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-lg sm:mt-6 sm:text-xl">{o.title}</h3>
+                    <span className="chip gold mt-2 sm:hidden">{o.pts}</span>
+                    <p className="muted mt-2 text-[15px]">{o.text}</p>
+                  </div>
                 </li>
               ))}
             </ol>
@@ -119,7 +129,7 @@ export default function Home() {
 
         {/* ---------- Ranks ---------- */}
         <section id="ranks" className="border-y border-line bg-bg2">
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-24 lg:grid-cols-[.9fr_1.1fr]">
+          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:py-24 lg:grid-cols-[.9fr_1.1fr]">
             <div>
               <SectionHead kicker="Rewards" title="Earn your rank">
                 The top {w.winners} split {fmt(w.prizeTotal)} {CONFIG.token.symbol}, paid inside the game at launch.
@@ -135,7 +145,7 @@ export default function Home() {
         </section>
 
         {/* ---------- Armory ---------- */}
-        <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-24 lg:grid-cols-[1fr_1.05fr]">
+        <section className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 sm:py-24 lg:grid-cols-[1fr_1.05fr]">
           <div className="order-2 lg:order-1">
             <SectionHead kicker="Fort Gainz" title="Gear up. Get swol.">
               Every run starts in the armory and ends at the gym. Plates on, rifle checked, grenades packed. Then train the stats that carry you through the war.
@@ -176,7 +186,7 @@ export default function Home() {
         {/* ---------- Campaign ---------- */}
         <section id="campaign" className="relative border-t border-line">
           <div className="grid-bg grid-fade absolute inset-0 -z-10 opacity-40" aria-hidden />
-          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-24 lg:grid-cols-[.8fr_1.2fr]">
+          <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 sm:py-24 lg:grid-cols-[.8fr_1.2fr]">
             <div className="lg:sticky lg:top-28 lg:self-start">
               <SectionHead kicker="The campaign" title="Five fronts. One war.">
                 Every front is a new map with tougher enemies and better loot. Fort Gainz is the only safe ground.
@@ -222,7 +232,7 @@ export default function Home() {
 
         {/* ---------- Briefing ---------- */}
         <section className="border-t border-line bg-bg2">
-          <div className="mx-auto max-w-7xl px-5 py-24">
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:py-24">
             <SectionHead kicker="Briefing" title="More than shooting" />
             <ol className="mt-12 grid gap-x-12 sm:grid-cols-2 lg:grid-cols-3">
               {FEATURES.map((f, i) => (
@@ -237,7 +247,7 @@ export default function Home() {
         </section>
 
         {/* ---------- Token + FAQ ---------- */}
-        <section className="mx-auto grid max-w-7xl gap-12 px-5 py-24 lg:grid-cols-[.85fr_1.15fr]">
+        <section className="mx-auto grid max-w-7xl gap-12 px-5 py-16 sm:py-24 lg:grid-cols-[.85fr_1.15fr]">
           <div>
             <SectionHead kicker="Token" title={CONFIG.token.symbol + (CONFIG.token.chain ? ` on ${CONFIG.token.chain}` : "")}>
               One token for Swoldiers. Only copy the contract address from this site or our X account.
@@ -279,14 +289,14 @@ export default function Home() {
         {/* ---------- Final call ---------- */}
         <section className="relative overflow-hidden border-t border-line">
           <div className="tape" />
-          <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-20 md:grid-cols-[auto_1fr_auto]">
+          <div className="mx-auto grid max-w-7xl items-center justify-items-center gap-6 px-5 py-14 text-center md:grid-cols-[auto_1fr_auto] md:justify-items-start md:gap-10 md:py-20 md:text-left">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/media/recruit.jpg" alt="" width={160} height={160} className="pixel size-32 rounded-full ring-4 ring-signal md:size-40" />
             <div>
               <h2 className="text-[clamp(34px,5vw,56px)]">Fort Gainz is waiting, recruit.</h2>
               <p className="mt-2 text-lg text-khaki">The roster closes soon. Enlist free and start climbing.</p>
             </div>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               <Link href="/whitelist" className="btn">
                 Enlist now →
               </Link>

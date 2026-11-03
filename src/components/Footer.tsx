@@ -4,7 +4,7 @@ import { xUrl } from "@/lib/config";
 export function Footer() {
   return (
     <footer className="relative overflow-hidden border-t border-line bg-bg2">
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 pt-14 pb-6 md:grid-cols-[1fr_auto]">
+      <div className="mx-auto grid max-w-7xl gap-6 px-5 pt-12 pb-6 md:grid-cols-[1fr_auto] md:gap-8 md:pt-14">
         <div>
           <p className="kicker">End of transmission</p>
           <p className="mt-3 max-w-md text-khaki">Bulk up. Gear up. Push the line. Follow the war on X for drops, missions and the launch date.</p>
@@ -16,7 +16,7 @@ export function Footer() {
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-5">
-        <div className="stencil -mb-[0.18em] text-[clamp(64px,17vw,240px)] leading-none text-panel select-none" aria-hidden>
+        <div className="stencil -mb-[0.18em] text-[clamp(40px,12vw,200px)] leading-none text-panel select-none" aria-hidden>
           SWOLDIERS
         </div>
       </div>

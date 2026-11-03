@@ -59,7 +59,7 @@ function StatusChip({ st, pts }: { st: Review; pts: number }) {
 
 function Order({ n, done, locked, title, chip, children }: { n: string; done?: boolean; locked?: boolean; title: React.ReactNode; chip: React.ReactNode; children: React.ReactNode }) {
   return (
-    <li className={`grid grid-cols-[40px_1fr] gap-4 border-b border-line py-6 last:border-0 ${locked ? "opacity-50" : ""}`}>
+    <li className={`grid grid-cols-[40px_minmax(0,1fr)] gap-3 border-b border-line py-5 sm:gap-4 sm:py-6 last:border-0 ${locked ? "opacity-50" : ""}`}>
       <span
         className={`grid size-10 place-items-center font-pixel text-xs ${done ? "bg-green text-ink" : "text-signal ring-1 ring-line"}`}
         aria-label={done ? "Done" : undefined}
@@ -68,7 +68,7 @@ function Order({ n, done, locked, title, chip, children }: { n: string; done?: b
       </span>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-xl">{title}</h3>
+          <h3 className="text-lg sm:text-xl">{title}</h3>
           {chip}
         </div>
         <div className="mt-1.5">{children}</div>
@@ -86,7 +86,7 @@ function DogTag({ j, address, onConnect, busy, progress }: { j: Joined | null; a
   const grade = j?.score ? gradeFor(j.score.rank) : null;
   const prize = j?.score ? CONFIG.whitelist.prizes.find((p) => j.score!.rank >= p.from && j.score!.rank <= p.to) : null;
   return (
-    <div className="tag relative px-6 pt-8 pb-6">
+    <div className="tag relative px-5 pt-8 pb-5 sm:px-6 sm:pb-6">
       <span className="absolute top-4 left-1/2 size-4 -translate-x-1/2 rounded-full bg-[#7c7f75] shadow-[inset_0_2px_3px_#0006]" aria-hidden />
       <div className="mt-3 flex items-center justify-between font-pixel text-[10px] tracking-[0.18em] uppercase">
         <span>Swoldiers · ID</span>
@@ -224,10 +224,10 @@ export function WhitelistApp() {
   return (
     <div className="relative">
       <div className="grid-bg grid-fade absolute inset-x-0 top-0 -z-10 h-[520px] opacity-50" aria-hidden />
-      <div className="mx-auto max-w-7xl px-5 py-14">
+      <div className="mx-auto max-w-7xl px-5 py-10 sm:py-14">
         <p className="kicker">Enlistment office</p>
         <h1 className="mt-3 text-[clamp(40px,6vw,72px)]">Report for duty</h1>
-        <p className="mt-3 max-w-2xl text-lg text-khaki">
+        <p className="mt-3 max-w-2xl text-base text-khaki sm:text-lg">
           Connect your wallet to enlist, then complete your orders to climb the roster. Free. The top {CONFIG.whitelist.winners} split{" "}
           {fmt(CONFIG.whitelist.prizeTotal)} {CONFIG.token.symbol}.
         </p>
@@ -238,8 +238,11 @@ export function WhitelistApp() {
           </div>
         ) : null}
 
-        <div className="mt-10 grid items-start gap-8 lg:grid-cols-[1fr_380px]">
+        <div className="mt-8 grid grid-cols-[minmax(0,1fr)] items-start gap-6 sm:mt-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-8">
           <div className="grid min-w-0 gap-6">
+            <div className="lg:hidden">
+              <DogTag j={j} address={address} onConnect={pick} busy={busy} progress={progress} />
+            </div>
             {inviter && phase === "out" ? (
               <div className="hud flex items-center justify-between gap-3 px-5 py-3">
                 <span>
@@ -254,7 +257,7 @@ export function WhitelistApp() {
             {phase === "loading" ? (
               <div className="hud muted p-6">{loadError || "Opening your file…"}</div>
             ) : phase === "out" ? (
-              <div className="hud p-6 sm:p-8">
+              <div className="hud p-5 sm:p-8">
                 <p className="kicker bare">Orders · locked</p>
                 <ol className="mt-2">
                   <Order n="01" title="Connect your wallet" chip={<span className="chip grey">+{P.joined} pts</span>}>
@@ -269,7 +272,7 @@ export function WhitelistApp() {
                 </ol>
               </div>
             ) : wl && !j ? (
-              <div className="hud p-6 sm:p-8">
+              <div className="hud p-5 sm:p-8">
                 <h2 className="text-2xl">The roster is closed</h2>
                 <p className="muted mt-2">This wallet did not enlist in time. Follow @{X} on X for the next round.</p>
                 <div className="mt-5 flex gap-3">
@@ -286,8 +289,10 @@ export function WhitelistApp() {
             ) : null}
           </div>
 
-          <aside className="grid gap-6 lg:sticky lg:top-24">
-            <DogTag j={j} address={address} onConnect={pick} busy={busy} progress={progress} />
+          <aside className="grid min-w-0 gap-6 lg:sticky lg:top-24">
+            <div className="hidden lg:block">
+              <DogTag j={j} address={address} onConnect={pick} busy={busy} progress={progress} />
+            </div>
             <div className="hud p-5">
               <div className="rows text-[15px]">
                 <div>
@@ -393,7 +398,7 @@ function SignedIn({ j, onChange, toast, onLogout, done }: { j: Joined; onChange:
 
   return (
     <>
-      <div className="hud p-6 sm:p-8">
+      <div className="hud p-5 sm:p-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="kicker bare">Orders</p>
@@ -539,7 +544,7 @@ function Missions({ j, closed, send, sending }: { j: Joined; closed: boolean; se
   if (!j.missions.length) return null;
   const unlocked = j.entry.follow_status === "approved";
   return (
-    <div className="hud p-6 sm:p-8">
+    <div className="hud p-5 sm:p-8">
       <p className="kicker bare">Bonus missions</p>
       <p className="muted mt-2 text-sm">
         {unlocked ? "Reply from the account you enlisted with and paste the link. Points count at once. We check them: fakes lose their points." : "Bonus missions open once your follow is approved."}
@@ -603,7 +608,7 @@ function Recruit({ j, toast }: { j: Joined; toast: Toast }) {
     }
   };
   return (
-    <div className="hud p-6 sm:p-8">
+    <div className="hud p-5 sm:p-8">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="kicker bare">Recruit your squad</p>
         <span className="chip gold">+{fmt(P.referral)} each</span>
@@ -636,7 +641,7 @@ function Breakdown({ j }: { j: Joined }) {
     ["Bonus missions", "+" + fmt(s.mpts)],
   ];
   return (
-    <div className="hud p-6 sm:p-8">
+    <div className="hud p-5 sm:p-8">
       <p className="kicker bare">Points breakdown</p>
       <div className="rows mt-3">
         {rows.map(([k, v]) => (
