@@ -23,7 +23,7 @@ export const CONFIG = {
   tagline: "A top-down pixel war MMO. Bulk up at Fort Gainz, push through five fronts, raid the Black Site and topple the Citadel.",
   siteUrl: (env(process.env.NEXT_PUBLIC_SITE_URL) || "http://localhost:3000").replace(/\/$/, ""),
   // X account without the @, and the announcement post people reply to
-  xAccount: env(process.env.NEXT_PUBLIC_X_ACCOUNT) || "swoldiers",
+  xAccount: env(process.env.NEXT_PUBLIC_X_ACCOUNT) || "swoldiers_",
   xPost: env(process.env.NEXT_PUBLIC_X_POST),
   token: {
     symbol: "$SWOL",

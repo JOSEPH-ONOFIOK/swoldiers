@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { FaArrowUpRightFromSquare, FaCheck, FaCircle, FaWallet } from "react-icons/fa6";
 import { api, ApiError, fmt, left, short, utc } from "@/lib/client";
 import { CONFIG, gradeFor } from "@/lib/config";
 import { useBoard, useNow, useSite } from "@/lib/hooks";
@@ -31,6 +32,7 @@ type WL = { joined: false; running: boolean } | Joined;
 
 const P = CONFIG.whitelist.points;
 const X = CONFIG.xAccount;
+const T = CONFIG.token.symbol;
 type Toast = (t: string, bad?: boolean) => void;
 type Send = (key: string, path: string, payload: object, okText: string) => Promise<boolean>;
 
@@ -45,9 +47,14 @@ function readRef() {
   }
 }
 
-const replyUrl = (post: string) => {
-  const id = /\/status\/(\d+)/.exec(post)?.[1];
-  return id ? `https://x.com/intent/post?in_reply_to=${id}` : `https://x.com/${X}`;
+const postId = (post: string) => /\/status\/(\d+)/.exec(post)?.[1];
+const replyUrl = (post: string, text?: string) => {
+  const id = postId(post);
+  return id ? `https://x.com/intent/post?in_reply_to=${id}${text ? `&text=${encodeURIComponent(text)}` : ""}` : `https://x.com/${X}`;
+};
+const repostUrl = (post: string) => {
+  const id = postId(post);
+  return id ? `https://x.com/intent/retweet?tweet_id=${id}` : `https://x.com/${X}`;
 };
 
 function StatusChip({ st, pts }: { st: Review; pts: number }) {
@@ -64,7 +71,7 @@ function Order({ n, done, locked, title, chip, children }: { n: string; done?: b
         className={`grid size-10 place-items-center font-pixel text-xs ${done ? "bg-green text-ink" : "text-signal ring-1 ring-line"}`}
         aria-label={done ? "Done" : undefined}
       >
-        {done ? "✓" : n}
+        {done ? <FaCheck aria-hidden size={14} /> : n}
       </span>
       <div className="min-w-0">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -325,7 +332,7 @@ export function WhitelistApp() {
           <section id="roll" className="hud mt-12 p-5 sm:p-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span className="kicker bare">
-                <span className="blink text-red">●</span> {board.final ? "Final roster" : "Full roster"}
+                <FaCircle aria-hidden size={9} className="blink text-red" /> {board.final ? "Final roster" : "Full roster"}
               </span>
               <span className="muted text-sm">
                 {board.final ? `Final. Paid in ${CONFIG.token.symbol} inside the game at launch.` : `${fmt(board.total)} enlisted · ties go to whoever enlisted first`}
@@ -346,7 +353,7 @@ export function WhitelistApp() {
               {wallets.map((w) => (
                 <button key={w.id} className="flex items-center gap-3 border border-line bg-bg px-4 py-3 text-left font-semibold transition-colors hover:border-signal" onClick={() => connect(w)}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  {w.icon ? <img src={w.icon} alt="" width={26} height={26} /> : <span className="size-[26px] bg-line" />}
+                  {w.icon ? <img src={w.icon} alt="" width={26} height={26} /> : <FaWallet aria-hidden size={26} className="text-muted" />}
                   {w.name}
                 </button>
               ))}
@@ -463,7 +470,8 @@ function SignedIn({ j, onChange, toast, onLogout, done }: { j: Joined; onChange:
                 }}
               >
                 <a className="btn sm ghost self-start sm:self-auto" href={`https://x.com/intent/follow?screen_name=${encodeURIComponent(X)}`} target="_blank" rel="noopener">
-                  Follow ↗
+                  Follow
+                  <FaArrowUpRightFromSquare aria-hidden size={11} />
                 </a>
                 <input
                   className="field"
@@ -487,17 +495,17 @@ function SignedIn({ j, onChange, toast, onLogout, done }: { j: Joined; onChange:
             ) : null}
           </Order>
 
-          <Order n="03" done={cs === "approved"} locked={!hasHandle} title="Comment on our post" chip={<StatusChip st={cs} pts={P.comment} />}>
+          <Order n="03" done={cs === "approved"} locked={!hasHandle} title={`Comment ${T} and repost`} chip={<StatusChip st={cs} pts={P.comment} />}>
             <p className="muted">
               {cs === "approved"
                 ? "Approved."
                 : cs === "pending"
                   ? "Sent. You can change the link while it is in review."
                   : !hasHandle
-                    ? "Send your X username in order 02 first: the comment must come from that account."
+                    ? "Send your X username in order 02 first: the comment and repost must come from that account."
                     : closed
                       ? "The roster is closed."
-                      : "Comment from your account, then paste the link of your comment here."}
+                      : `Comment ${T} on our post and repost it from your account, then paste the link of your comment here.`}
             </p>
             {cs === "rejected" && e.note ? <Note>{e.note}</Note> : null}
             {cs !== "approved" && !closed && hasHandle ? (
@@ -506,11 +514,16 @@ function SignedIn({ j, onChange, toast, onLogout, done }: { j: Joined; onChange:
                 onSubmit={(ev) => {
                   ev.preventDefault();
                   if (!post.trim()) return toast("Paste the link of your comment first.", true);
-                  send("submit", "/api/wl/submit", { post_url: post }, "Sent. We will review it soon.");
+                  send("submit", "/api/wl/submit", { post_url: post }, "Sent. We will check your comment and repost soon.");
                 }}
               >
-                <a className="btn sm ghost self-start sm:self-auto" href={replyUrl(CONFIG.xPost)} target="_blank" rel="noopener">
-                  Comment ↗
+                <a className="btn sm ghost self-start sm:self-auto" href={replyUrl(CONFIG.xPost, T)} target="_blank" rel="noopener">
+                  Comment {T}
+                  <FaArrowUpRightFromSquare aria-hidden size={11} />
+                </a>
+                <a className="btn sm ghost self-start sm:self-auto" href={repostUrl(CONFIG.xPost)} target="_blank" rel="noopener">
+                  Repost
+                  <FaArrowUpRightFromSquare aria-hidden size={11} />
                 </a>
                 <input
                   className="field"
@@ -570,7 +583,8 @@ function Missions({ j, closed, send, sending }: { j: Joined; closed: boolean; se
                 }}
               >
                 <a className="btn sm ghost self-start sm:self-auto" href={replyUrl(m.post)} target="_blank" rel="noopener">
-                  Comment ↗
+                  Comment
+                  <FaArrowUpRightFromSquare aria-hidden size={11} />
                 </a>
                 <input
                   className="field py-2!"
@@ -620,7 +634,8 @@ function Recruit({ j, toast }: { j: Joined; toast: Toast }) {
           Copy
         </button>
         <a className="btn sm ghost" href={share} target="_blank" rel="noopener">
-          Share ↗
+          Share
+          <FaArrowUpRightFromSquare aria-hidden size={11} />
         </a>
       </div>
       <p className="mt-3 font-pixel text-[11px] tracking-wider text-muted uppercase">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaXTwitter } from "react-icons/fa6";
 import { xUrl } from "@/lib/config";
 
 export function Footer() {
@@ -12,7 +13,7 @@ export function Footer() {
         <div className="flex flex-wrap gap-x-6 gap-y-2 self-end font-pixel text-[12px] tracking-[0.14em] text-khaki uppercase">
           <Link href="/whitelist" className="hover:text-signal">Whitelist</Link>
           <Link href="/docs" className="hover:text-signal">Docs</Link>
-          <a href={xUrl} target="_blank" rel="noopener" className="hover:text-signal">X ↗</a>
+          <a href={xUrl} target="_blank" rel="noopener" aria-label="Swoldiers on X" className="hover:text-signal"><FaXTwitter aria-hidden size={15} /></a>
         </div>
       </div>
       <div className="mx-auto max-w-7xl px-5">

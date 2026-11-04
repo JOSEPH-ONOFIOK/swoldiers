@@ -106,9 +106,9 @@ export type Skill = { key: string; name: string; cooldown: string; power: string
 export const SKILLS: Skill[] = [
   { key: "1", name: "Rifle", cooldown: "None", power: "×1", what: "Your main gun. Aim with the mouse, hold to fire. R reloads." },
   { key: "2", name: "Shotgun Blast", cooldown: "2.5 s", power: "×1.5 each", what: "A wide blast in front of you. Best up close." },
-  { key: "3", name: "Frag Grenade", cooldown: "4 s", power: "×1.3 each", what: "Thrown where you aim. Hits a small area. Full damage to tanks." },
+  { key: "3", name: "Frag Grenade", cooldown: "4 s", power: "×1.3 each", what: "Drops the way you are facing, onto the closest enemy there. Hits a small area. Full damage to tanks." },
   { key: "4", name: "Flex", cooldown: "10 s", power: "+40% for 5 s", what: "Pump up: you hit 40% harder for 5 seconds and nearby enemies turn on you." },
-  { key: "5", name: "Airstrike", cooldown: "12 s", power: "×2.5 each", what: "Marks a line where you aim. Shells land a second later. Your hardest hit." },
+  { key: "5", name: "Airstrike", cooldown: "12 s", power: "×2.5 each", what: "Marks a line the way you are facing, centred on the closest enemy there. Shells land a second later. Your hardest hit." },
   { key: "6", name: "Med Kit", cooldown: "8 s", power: "+35% health", what: "Heals 35% of your health at once." },
 ];
 

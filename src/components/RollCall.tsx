@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { FaCircle } from "react-icons/fa6";
 import { CONFIG } from "@/lib/config";
 import { useBoard } from "@/lib/hooks";
 import { RollTable } from "./RollTable";
@@ -10,7 +11,7 @@ export function RollCall() {
     <div className="hud p-5 sm:p-6">
       <div className="flex items-center justify-between">
         <span className="kicker bare">
-          <span className="blink text-red">●</span> {board?.final ? "Final roll call" : "Live roll call"}
+          <FaCircle aria-hidden size={9} className="blink text-red" /> {board?.final ? "Final roll call" : "Live roll call"}
         </span>
         <span className="font-pixel text-[11px] text-muted">Pay in {CONFIG.token.symbol}</span>
       </div>

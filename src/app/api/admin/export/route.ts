@@ -12,7 +12,7 @@ const cell = (v: unknown) => {
 export async function GET() {
   await connection();
   if (!(await isAdmin())) return new Response("Sign in as admin.", { status: 401 });
-  const { rows, entries } = await ranking(true);
+  const { rows, entries } = await ranking();
   const byAddr = new Map(entries.map((e) => [e.address, e]));
   const head = ["rank", "wallet", "x_handle", "points", "reward", "follow", "comment", "comment_url", "referrals", "mission_points", "joined_utc"];
   const lines = rows.map((r) => {

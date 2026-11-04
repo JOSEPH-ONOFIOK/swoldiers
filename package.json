@@ -12,6 +12,7 @@
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "react-icons": "^5.7.0",
     "viem": "^2.57.16"
   },
   "devDependencies": {

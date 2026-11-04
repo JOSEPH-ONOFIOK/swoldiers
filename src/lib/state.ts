@@ -1,7 +1,7 @@
 import { getSession } from "./auth";
 import { whitelistOpen } from "./config";
 import { Oops } from "./http";
-import { getEntry, getMissions, publicEntry, ranking, type Entry } from "./wl";
+import { getEntry, getMissions, publicEntry, standing, type Entry } from "./wl";
 
 export async function requireEntry() {
   const s = await getSession();
@@ -20,18 +20,16 @@ export async function stateFor(address: string, entry?: Entry | null) {
   const e = entry === undefined ? await getEntry(address) : entry;
   const running = whitelistOpen();
   if (!e) return { joined: false, running };
-  const { rows, entries } = await ranking(true);
-  const me = rows.find((r) => r.address === address);
-  const invited = entries.filter((x) => x.referredBy === address);
-  const missions = (await getMissions())
+  const [me, allMissions] = await Promise.all([standing(e), getMissions()]);
+  const missions = allMissions
     .filter((m) => m.active || e.missions[m.id])
     .map((m) => ({ id: m.id, title: m.title, post: m.post, points: m.points, active: m.active, done: e.missions[m.id]?.url ?? null }));
   return {
     joined: true,
     running,
     entry: publicEntry(e),
-    score: me ? { rank: me.rank, points: me.points, reward: me.reward, refs: me.refs, mpts: me.mpts, total: rows.length } : null,
-    invites: { sent: invited.length, approved: me?.refs ?? 0 },
+    score: me ? { rank: me.rank, points: me.points, reward: me.reward, refs: me.refs, mpts: me.mpts, total: me.total } : null,
+    invites: { sent: me?.sent ?? 0, approved: me?.refs ?? 0 },
     missions,
   };
 }

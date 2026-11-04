@@ -12,12 +12,12 @@ type Row = {
   joinedAt: number;
   updatedAt: number;
   points: number;
-  rank: number;
 };
 type Mission = { id: string; title: string; post: string; points: number; active: boolean; createdAt: number };
 type MissionPost = { address: string; x_handle: string | null; id: string; url: string; at: number; pts: number };
 type Queue = {
-  stats: { total: number; followApproved: number; commentApproved: number };
+  stats: { total: number; followApproved: number; commentApproved: number; followWaiting: number; commentWaiting: number };
+  sheet: boolean;
   follows: Row[];
   comments: Row[];
   missionPosts: MissionPost[];
@@ -98,7 +98,7 @@ export function AdminApp() {
                 ) : null}
                 <code className="text-xs">{short(r.address)}</code>
                 <span className="muted text-xs">
-                  #{r.rank} · {fmt(r.points)} pts
+                  {fmt(r.points)} pts
                 </span>
               </div>
               {kind === "comment" && r.post_url ? (
@@ -136,6 +136,11 @@ export function AdminApp() {
           <button className="btn sm ghost" onClick={load}>
             Refresh
           </button>
+          {q.sheet ? (
+            <button className="btn sm ghost" onClick={() => call("/api/admin/sync", {}, "Sending every wallet to the sheet. Large lists take a few minutes.")}>
+              Sync sheet
+            </button>
+          ) : null}
           <a className="btn sm ghost" href="/api/admin/export">
             Export CSV
           </a>
@@ -156,7 +161,7 @@ export function AdminApp() {
         {[
           [q.stats.total, "Enlisted"],
           [q.stats.followApproved, "Follows approved"],
-          [q.stats.commentApproved, "Comments approved"],
+          [q.stats.commentApproved, "Comment + RT approved"],
         ].map(([n, l]) => (
           <div key={l} className="hud py-4">
             <b className="stencil block text-3xl">{fmt(n as number)}</b>
@@ -165,12 +170,12 @@ export function AdminApp() {
         ))}
       </div>
 
-      <h2 className="mt-10 mb-3 text-xl">Follows to check ({q.follows.length})</h2>
+      <h2 className="mt-10 mb-3 text-xl">Follows to check ({q.stats.followWaiting})</h2>
       <p className="muted mb-3 text-sm">Open the profile and check that it follows the project account.</p>
       {reviewList(q.follows, "follow")}
 
-      <h2 className="mt-10 mb-3 text-xl">Comments to check ({q.comments.length})</h2>
-      <p className="muted mb-3 text-sm">Open the link: it must be a real reply to the announcement post from that account.</p>
+      <h2 className="mt-10 mb-3 text-xl">Comment + RT to check ({q.stats.commentWaiting})</h2>
+      <p className="muted mb-3 text-sm">Open the link: it must be a real reply saying $SWOL on the announcement post from that account, and that account must have reposted the post. X only shows repost lists to some viewers, so check their profile if needed.</p>
       {reviewList(q.comments, "comment")}
 
       <h2 className="mt-10 mb-3 text-xl">Missions</h2>

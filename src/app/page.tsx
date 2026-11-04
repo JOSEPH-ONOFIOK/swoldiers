@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaArrowRight, FaArrowUpRightFromSquare, FaPlus } from "react-icons/fa6";
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
 import { PayGrades } from "@/components/PayGrades";
@@ -15,10 +16,10 @@ const code = (f: Front) => (f.id === "base" ? "HQ" : f.id === "raid" ? "RX" : f.
 
 const FAQ: [string, string][] = [
   ["What is Swoldiers?", "A top-down pixel war MMO. You start at Fort Gainz, the safe base, bulk up, gear up, and fight through five fronts, a raid and two world bosses."],
-  ["How do I join the whitelist?", "Connect your wallet: you are enlisted. Then follow us on X and comment on our post to earn points. We review each one."],
+  ["How do I join the whitelist?", `Connect your wallet: you are enlisted. Then follow us on X, comment ${CONFIG.token.symbol} on our post and repost it to earn points. We review each one.`],
   ["Does joining cost anything?", "No. Signing in is a free message in your wallet. It is not a transaction and costs no gas."],
   ["Which wallets work?", "Any EVM wallet in your browser: MetaMask, Rabby, Phantom, Coinbase Wallet, Backpack and others."],
-  ["When can I play?", "The launch date is announced on X. The Play button opens on launch day."],
+  ["When can I play?", "The demo is open now in your browser. The launch date for the full game is announced on X."],
 ];
 
 function SectionHead({ kicker, title, children }: { kicker: string; title: string; children?: React.ReactNode }) {
@@ -37,7 +38,7 @@ export default function Home() {
   const orders = [
     { n: "01", title: "Connect your wallet", pts: `+${P.joined}`, text: "Sign a free message. You are on the whitelist at once." },
     { n: "02", title: `Follow @${CONFIG.xAccount}`, pts: `+${P.follow}`, text: "Follow on X and send your username. We check it." },
-    { n: "03", title: "Answer the call", pts: `+${P.comment}`, text: "Comment on our post from that account and paste the link." },
+    { n: "03", title: `Comment ${CONFIG.token.symbol} and repost`, pts: `+${P.comment}`, text: `Comment ${CONFIG.token.symbol} on our post, repost it from that account and paste your comment link.` },
     { n: "04", title: "Recruit your squad", pts: `+${P.referral} each`, text: "Share your invite link. Each friend with an approved follow counts." },
   ];
 
@@ -78,7 +79,8 @@ export default function Home() {
             <p className="mt-6 max-w-xl text-[clamp(17px,1.8vw,20px)] font-medium text-sand/90">{CONFIG.tagline}</p>
             <div className="mt-8 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-center">
               <Link href="/whitelist" className="btn">
-                Enlist now →
+                Enlist now
+                <FaArrowRight aria-hidden size={13} />
               </Link>
               <PlayButton />
             </div>
@@ -122,7 +124,7 @@ export default function Home() {
               ))}
             </ol>
             <p className="muted mt-6 text-sm">
-              <span className="text-signal">+</span> Bonus missions drop on X after your follow is approved.
+              <FaPlus aria-hidden size={12} className="inline text-signal" /> Bonus missions drop on X after your follow is approved.
             </p>
           </div>
         </section>
@@ -259,7 +261,8 @@ export default function Home() {
                   <code className="break-all text-sm font-bold text-signal">{CONFIG.token.ca}</code>
                   {CONFIG.token.explorer ? (
                     <a className="btn sm ghost" href={`${CONFIG.token.explorer}/token/${CONFIG.token.ca}`} target="_blank" rel="noopener">
-                      Explorer ↗
+                      Explorer
+                      <FaArrowUpRightFromSquare aria-hidden size={11} />
                     </a>
                   ) : null}
                 </div>
@@ -277,7 +280,7 @@ export default function Home() {
                 <details key={q} className="group border-b border-line">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-lg font-semibold">
                     {q}
-                    <span className="font-pixel text-signal transition-transform group-open:rotate-45">+</span>
+                    <FaPlus aria-hidden size={14} className="shrink-0 text-signal transition-transform group-open:rotate-45" />
                   </summary>
                   <p className="muted -mt-1 pb-5">{a}</p>
                 </details>
@@ -298,7 +301,8 @@ export default function Home() {
             </div>
             <div className="flex flex-wrap justify-center gap-3">
               <Link href="/whitelist" className="btn">
-                Enlist now →
+                Enlist now
+                <FaArrowRight aria-hidden size={13} />
               </Link>
               <a href={xUrl} target="_blank" rel="noopener" className="btn ghost">
                 Follow on X

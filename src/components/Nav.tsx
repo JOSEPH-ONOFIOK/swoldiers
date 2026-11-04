@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { FaXTwitter } from "react-icons/fa6";
 import { api, short } from "@/lib/client";
 import { xUrl } from "@/lib/config";
 
@@ -10,6 +11,7 @@ const LINKS = [
   { href: "/#ranks", label: "Ranks" },
   { href: "/#campaign", label: "Campaign" },
   { href: "/docs", label: "Docs" },
+  { href: "/play", label: "Play" },
 ];
 
 export function Nav() {
@@ -55,8 +57,8 @@ export function Nav() {
               {l.label}
             </Link>
           ))}
-          <a href={xUrl} target="_blank" rel="noopener" className={`${link} text-khaki`}>
-            X ↗
+          <a href={xUrl} target="_blank" rel="noopener" aria-label="Swoldiers on X" className={`${link} text-khaki`}>
+            <FaXTwitter aria-hidden size={15} />
           </a>
           {me ? (
             <span className="flex items-center gap-2 md:ml-3">

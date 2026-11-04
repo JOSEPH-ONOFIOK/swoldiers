@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 import { DocsNav } from "./DocsNav";
 import { Footer } from "./Footer";
 import { Nav } from "./Nav";
@@ -38,7 +39,7 @@ export function DocsShell({ title, lead, current, children }: { title: string; l
           <div className="mt-14 grid grid-cols-2 gap-3 border-t border-line pt-6">
             {prev ? (
               <Link href={prev.href} className="hud block p-4 no-underline! transition-colors hover:border-signal">
-                <span className="font-pixel text-[10px] tracking-widest text-muted uppercase">← Previous</span>
+                <span className="font-pixel text-[10px] tracking-widest text-muted uppercase"><FaArrowLeft aria-hidden size={10} className="mr-1.5 inline" />Previous</span>
                 <span className="mt-1 block font-semibold text-sand">{prev.label}</span>
               </Link>
             ) : (
@@ -46,7 +47,7 @@ export function DocsShell({ title, lead, current, children }: { title: string; l
             )}
             {next ? (
               <Link href={next.href} className="hud block p-4 text-right no-underline! transition-colors hover:border-signal">
-                <span className="font-pixel text-[10px] tracking-widest text-muted uppercase">Next →</span>
+                <span className="font-pixel text-[10px] tracking-widest text-muted uppercase">Next<FaArrowRight aria-hidden size={10} className="ml-1.5 inline" /></span>
                 <span className="mt-1 block font-semibold text-sand">{next.label}</span>
               </Link>
             ) : null}

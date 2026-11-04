@@ -1,7 +1,7 @@
 import { body, Oops, route, str } from "@/lib/http";
 import { limit } from "@/lib/limit";
 import { requireEntry, requireOpen, stateFor } from "@/lib/state";
-import { claimPost, getMissions, isNewer, parseStatus, putEntry } from "@/lib/wl";
+import { claimPost, getMissions, isNewer, logMission, parseStatus, putEntry } from "@/lib/wl";
 
 // Extra missions: reply to one of our posts. Points count at once and are checked later.
 export async function POST(req: Request) {
@@ -22,6 +22,7 @@ export async function POST(req: Request) {
     if (!(await claimPost(p.id, e.address))) throw new Oops("That post was already sent.");
     e.missions[m.id] = { url: p.url, at: Date.now(), pts: m.points };
     await putEntry(e);
+    await logMission(e.address, m.id, e.missions[m.id].at);
     return stateFor(e.address, e);
   });
 }

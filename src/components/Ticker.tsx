@@ -1,4 +1,5 @@
 "use client";
+import { FaStar } from "react-icons/fa6";
 import { fmt, left } from "@/lib/client";
 import { CONFIG } from "@/lib/config";
 import { useBoard, useNow, useSite } from "@/lib/hooks";
@@ -21,7 +22,7 @@ export function Ticker() {
     items.map((t, i) => (
       <span key={k + i} className="flex items-center gap-6 px-6">
         {t}
-        <span aria-hidden>✦</span>
+        <FaStar aria-hidden size={11} />
       </span>
     ));
   return (
