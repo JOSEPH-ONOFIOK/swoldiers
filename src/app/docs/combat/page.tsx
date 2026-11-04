@@ -37,6 +37,7 @@ export default function Combat() {
       <p><b>Cover.</b> Walls and wrecks stop bullets, yours and theirs. Drones fly over cover.</p>
       <p><b>Armor.</b> Tanks only take full damage from explosives: Frag Grenade and Airstrike.</p>
       <p><b>Rolling.</b> A combat roll makes you dodge shots for a moment. Use it on sniper lasers.</p>
+      <p><b>Health pills.</b> Every 2 waves a pill drops next to you and comes to you on its own. It heals 30% of your health.</p>
       <p><b>Levels.</b> Every kill gives XP. A new level shows LEVEL UP in green and gives you a gym point.</p>
 
       <h2>A simple rotation</h2>

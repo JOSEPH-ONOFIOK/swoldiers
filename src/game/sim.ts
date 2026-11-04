@@ -1,7 +1,7 @@
 // The run itself: no canvas, no DOM, so it can also be driven by a test bot.
 import { ENEMIES, FRONTS, SKILLS, type Enemy as EnemyData, type Front } from "../lib/game";
 import {
-  BOSS_SOLO_HP, CHOPPER_INBOUND, CHOPPER_LANDED, EXTRACT_TIME, FIRST_WAVE, GREED, KINDS, LAST_WAVE, LZ_RADIUS, PLATES, RIFLES, ROSTERS, SPEED_RAMP, WAVE_TIME, WORLD,
+  BOSS_SOLO_HP, CHOPPER_INBOUND, CHOPPER_LANDED, EXTRACT_TIME, FIRST_WAVE, GREED, KINDS, LAST_WAVE, LZ_RADIUS, PILL_EVERY, PILL_HEAL, PLATES, RELOAD_TIME, RIFLES, ROSTERS, SPEED_RAMP, WAVE_TIME, WORLD,
   type Kind, type Save,
 } from "./tuning";
 
@@ -27,6 +27,7 @@ export type Foe = {
 };
 export type Shot = { x: number; y: number; vx: number; vy: number; t: number; dmg: number; mine: boolean; over: boolean; splash: number; flame: boolean };
 export type Loot = { x: number; y: number; v: number; t: number };
+export type Pill = { x: number; y: number; t: number };
 export type Crate = { x: number; y: number; v: number };
 export type Blast = { x: number; y: number; t: number; dmg: number; r: number; kind: "frag" | "strike"; ticks: number; fromX?: number; fromY?: number; life?: number };
 export type Fire = { x: number; y: number; r: number; t: number };
@@ -86,7 +87,7 @@ export class Run {
   chopper: Chopper | null = null;
   result: Result | null = null; deadT = 0;
 
-  foes: Foe[] = []; shots: Shot[] = []; loot: Loot[] = []; crates: Crate[] = []; blasts: Blast[] = []; fires: Fire[] = [];
+  foes: Foe[] = []; shots: Shot[] = []; loot: Loot[] = []; pills: Pill[] = []; crates: Crate[] = []; blasts: Blast[] = []; fires: Fire[] = [];
   sparks: Spark[] = []; pops: Pop[] = []; puffs: Puff[] = []; decals: Decal[] = []; flash = 0; shotFlash = 0; lightT = 0;
   blobs: { c: number; r: number; w: number; h: number }[] = [];
   events: GameEvent[] = [];
@@ -101,7 +102,7 @@ export class Run {
     this.maxHp = this.hp = 100 + 15 * end;
     this.armor = Math.min(0.6, (PLATES[save.plates]?.armor ?? 0) + 0.02 * end);
     this.speed = 74 * (1 + 0.04 * agi);
-    this.reloadTime = 1.4 * 0.95 ** agi;
+    this.reloadTime = RELOAD_TIME * 0.95 ** agi;
     this.rollCd = 1.6 * 0.95 ** agi;
     this.ammo = this.rifle.mag;
     this.buildMap();
@@ -178,7 +179,14 @@ export class Run {
   private endWave() {
     const greed = GREED[this.wave];
     if (greed) this.callChopper(greed);
+    if (this.wave % PILL_EVERY === 0) this.dropPill();
     this.startWave();
+  }
+
+  // Lands beside the player so it can be seen, then comes to them on its own.
+  private dropPill() {
+    const a = this.rand() * 6.28;
+    this.pills.push({ x: this.x + Math.cos(a) * 34, y: this.y + Math.sin(a) * 34, t: 0 });
   }
 
   private callChopper(greed: number) {
@@ -628,6 +636,22 @@ export class Run {
       }
     }
     this.loot = this.loot.filter((l) => l.v > 0);
+
+    for (const p of this.pills) {
+      p.t += dt;
+      if (p.t < 0.6) continue;
+      const dx = this.x - p.x, dy = this.y - p.y, d = Math.hypot(dx, dy) || 1;
+      p.x += (dx / d) * 150 * dt;
+      p.y += (dy / d) * 150 * dt;
+      if (d < 8 && this.hp > 0) {
+        this.hp = Math.min(this.maxHp, this.hp + this.maxHp * PILL_HEAL);
+        this.burn = 0;
+        p.t = -1;
+        this.events.push("heal");
+        this.pops.push({ x: this.x, y: this.y - 16, text: "+HP", c: "#9bc53d", t: 0.9 });
+      }
+    }
+    this.pills = this.pills.filter((p) => p.t >= 0);
   }
 
   private stepChopper(dt: number) {

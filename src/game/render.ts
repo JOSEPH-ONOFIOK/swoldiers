@@ -290,7 +290,7 @@ type Sheet = { front: HTMLCanvasElement[]; back: HTMLCanvasElement[]; hitF: HTML
 type Pack = {
   people: Record<string, Sheet>; dog: HTMLCanvasElement[]; dogHit: HTMLCanvasElement[]; drone: HTMLCanvasElement; droneHit: HTMLCanvasElement;
   tank: HTMLCanvasElement[]; tankHit: HTMLCanvasElement; mammoth: HTMLCanvasElement[]; mammothHit: HTMLCanvasElement; turretA: HTMLCanvasElement; turretB: HTMLCanvasElement;
-  rifle: HTMLCanvasElement; rifleE: HTMLCanvasElement; chopper: HTMLCanvasElement; crate: HTMLCanvasElement; bits: HTMLCanvasElement[]; glow: Record<string, HTMLCanvasElement>; shadow: HTMLCanvasElement;
+  rifle: HTMLCanvasElement; rifleE: HTMLCanvasElement; chopper: HTMLCanvasElement; crate: HTMLCanvasElement; pill: HTMLCanvasElement; bits: HTMLCanvasElement[]; glow: Record<string, HTMLCanvasElement>; shadow: HTMLCanvasElement;
 };
 
 function softDisc(size: number, stops: [number, string][]) {
@@ -326,6 +326,13 @@ function sprites(): Pack {
       rect(g, 5, 11, 16, 5, "#f4c430");
       rect(g, 6, 12, 14, 3, "#3a2e1a");
       rect(g, 8, 13, 10, 1, "#f4c430");
+    }),
+    pill: art(24, 12, (g) => {
+      oval(g, 7, 6, 5.5, 5.5, "#d9472b");
+      oval(g, 17, 6, 5.5, 5.5, "#ece4cc");
+      rect(g, 7, 0.5, 5, 11, "#d9472b");
+      rect(g, 12, 0.5, 5, 11, "#ece4cc");
+      rect(g, 5, 2, 14, 1.5, "rgba(255,255,255,.55)");
     }),
     bits: ["#c9a648", "#d8c070", "#a8a494"].map((c) =>
       art(7, 7, (g) => {
@@ -897,6 +904,14 @@ export function draw(x: G, run: Run, world: World, vw: number, vh: number, font:
     shadow(x, l.x, l.y + 2, 5);
     x.drawImage(p.bits[Math.floor(l.x) % 3], l.x - 2.2, l.y - 2.2 - up, 4.4, 4.4);
     if ((run.time * 2 + l.y) % 1 < 0.12) rect(x, l.x - 0.5, l.y - 3 - up, 1, 1, "#fff");
+  }
+  for (const f of run.pills) {
+    const size = 24 + Math.sin(run.time * 9) * 3, up = 3 + Math.sin(run.time * 6) * 1.5;
+    shadow(x, f.x, f.y + 3, 10);
+    x.globalCompositeOperation = "lighter";
+    x.drawImage(p.glow.red, f.x - size / 2, f.y - up - size / 2, size, size);
+    x.globalCompositeOperation = "source-over";
+    x.drawImage(p.pill, f.x - 6, f.y - up - 3, 12, 6);
   }
   for (const f of run.foes)
     if (f.aim > 0) {

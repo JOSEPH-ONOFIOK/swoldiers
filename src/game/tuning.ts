@@ -43,6 +43,10 @@ export const FIRST_WAVE = 5; // enemies in wave 1 on every front
 // Speed gained per wave. Melee enemies ramp hardest: slow enough to outrun early, not late.
 export const SPEED_RAMP = { melee: 0.11, other: 0.04 };
 
+export const RELOAD_TIME = 0.8; // seconds, before Agility
+export const PILL_EVERY = 2; // a health pill after this many waves
+export const PILL_HEAL = 0.3; // share of max health
+
 export const WAVE_TIME = 20;
 export const CHOPPER_INBOUND = 3;
 export const CHOPPER_LANDED = 15;
@@ -51,16 +55,16 @@ export const LZ_RADIUS = 34;
 
 export const RIFLES = [
   { name: "Service Rifle", dmg: 10, rate: 0.13, mag: 30, price: 0 },
-  { name: "Swol AR", dmg: 13, rate: 0.115, mag: 36, price: 300 },
-  { name: "Heavy Carbine", dmg: 17, rate: 0.105, mag: 40, price: 1000 },
-  { name: "Gainz LMG", dmg: 20, rate: 0.085, mag: 75, price: 2600 },
+  { name: "Swol AR", dmg: 13, rate: 0.115, mag: 36, price: 450 },
+  { name: "Heavy Carbine", dmg: 17, rate: 0.105, mag: 40, price: 1500 },
+  { name: "Gainz LMG", dmg: 20, rate: 0.085, mag: 75, price: 3900 },
 ];
 
 export const PLATES = [
   { name: "No plates", armor: 0, price: 0 },
-  { name: "Steel plates", armor: 0.1, price: 220 },
-  { name: "Ceramic plates", armor: 0.18, price: 800 },
-  { name: "Titan plates", armor: 0.26, price: 2200 },
+  { name: "Steel plates", armor: 0.1, price: 330 },
+  { name: "Ceramic plates", armor: 0.18, price: 1200 },
+  { name: "Titan plates", armor: 0.26, price: 3300 },
 ];
 
 export const STATS = {
@@ -69,7 +73,7 @@ export const STATS = {
   agi: { name: "Agility", what: "+4% speed, faster reload and roll" },
 } as const;
 export type StatKey = keyof typeof STATS;
-export const statPrice = (level: number) => Math.round(50 * 1.45 ** level);
+export const statPrice = (level: number) => Math.round(75 * 1.45 ** level);
 
 export type Save = {
   scrap: number;
