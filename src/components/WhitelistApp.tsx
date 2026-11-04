@@ -91,6 +91,8 @@ function Note({ children }: { children: React.ReactNode }) {
 // ---------- the dog tag ID card ----------
 function DogTag({ j, address, onConnect, busy, progress }: { j: Joined | null; address: string | null; onConnect: () => void; busy: boolean; progress: string }) {
   const grade = j?.score ? gradeFor(j.score.rank) : null;
+  // Nothing is won until the roster closes, so an open roster says so on the card.
+  const live = j?.running;
   const prize = j?.score ? CONFIG.whitelist.prizes.find((p) => j.score!.rank >= p.from && j.score!.rank <= p.to) : null;
   return (
     <div className="tag relative px-5 pt-8 pb-5 sm:px-6 sm:pb-6">
@@ -109,25 +111,26 @@ function DogTag({ j, address, onConnect, busy, progress }: { j: Joined | null; a
       </div>
       {j?.score ? (
         <>
-          <div className="mt-5 grid grid-cols-3 gap-2 text-center">
+          <div className="mt-5 grid grid-cols-[1fr_0.8fr_1.5fr] gap-2 text-center">
             {[
-              ["#" + fmt(j.score.rank), "Rank"],
+              ["#" + fmt(j.score.rank), live ? "Rank now" : "Rank"],
               [fmt(j.score.points), "Points"],
-              [j.score.reward ? fmt(j.score.reward) : "—", CONFIG.token.symbol],
+              [j.score.reward ? fmt(j.score.reward) : "—", live ? "If closed now" : CONFIG.token.symbol],
             ].map(([v, l]) => (
               <div key={l} className="rounded-lg bg-black/10 py-2.5">
-                <b className="stencil block text-xl">{v}</b>
+                <b className="stencil block text-lg sm:text-xl">{v}</b>
                 <span className="font-pixel text-[9px] tracking-widest uppercase">{l}</span>
               </div>
             ))}
           </div>
           <div className="mt-4 flex items-center justify-between rounded-lg bg-ink px-3 py-2.5 text-sand">
-            <span className="font-pixel text-[10px] tracking-widest text-muted uppercase">Grade</span>
+            <span className="font-pixel text-[10px] tracking-widest text-muted uppercase">{live ? "Current grade" : "Grade"}</span>
             <span className="flex items-center gap-2">
               <Insignia grade={grade!} stars={prize?.stars} size={13} />
               <b className="stencil">{grade}</b>
             </span>
           </div>
+          {live ? <p className="mt-3 text-center text-xs font-medium">Your rank moves as others climb. Rewards are set when the roster closes.</p> : null}
         </>
       ) : !j ? (
         <div className="mt-6">
@@ -675,7 +678,7 @@ function Breakdown({ j }: { j: Joined }) {
           The top {CONFIG.whitelist.winners} get paid. Do bonus missions and recruit to climb.
         </p>
       ) : CONFIG.whitelist.perkTop && s.rank <= CONFIG.whitelist.perkTop ? (
-        <p className="muted mt-3 text-sm">Your rank also earns {CONFIG.whitelist.perk}.</p>
+        <p className="muted mt-3 text-sm">Stay in the top {fmt(CONFIG.whitelist.perkTop)} to also earn {CONFIG.whitelist.perk}.</p>
       ) : null}
     </div>
   );
