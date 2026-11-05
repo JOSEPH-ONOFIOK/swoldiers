@@ -8,7 +8,7 @@ export type Kind = { speed: number; r: number; attack: Attack; range: number; cd
 
 export const KINDS: Record<string, Kind> = {
   "Feral dog": { speed: 58, r: 6, attack: "melee", range: 0, cd: 1, sprite: "dog" },
-  Scavenger: { speed: 52, r: 6, attack: "melee", range: 0, cd: 0.9, sprite: "scavenger" },
+  Scavenger: { speed: 52, r: 6, attack: "rifle", range: 72, cd: 1.1, sprite: "scavenger" },
   Raider: { speed: 48, r: 6, attack: "rifle", range: 130, cd: 1.3, sprite: "raider" },
   "Scrap drone": { speed: 60, r: 6, attack: "rifle", range: 110, cd: 1.5, sprite: "drone", flies: true },
   Rifleman: { speed: 46, r: 6, attack: "rifle", range: 150, cd: 1.1, sprite: "rifleman" },
@@ -27,12 +27,12 @@ export const ROSTERS: Record<string, Roster> = {
   f2: { mix: [["Raider", 3], ["Scrap drone", 2], ["Scavenger", 1]], density: 1 },
   f3: { mix: [["Rifleman", 4], ["Sniper", 1], ["Raider", 1]], density: 0.75 },
   f4: { mix: [["Flamer", 3], ["Rifleman", 2], ["Light tank", 1]], density: 0.72 },
-  raid: { mix: [["Shock trooper", 1]], density: 0.72 },
-  f5: { mix: [["Shock trooper", 3], ["Light tank", 1]], density: 0.65, boss: { 4: "Iron Colonel", 6: "The Mammoth" } },
+  raid: { mix: [["Shock trooper", 1]], density: 0.62 },
+  f5: { mix: [["Shock trooper", 3], ["Light tank", 1]], density: 0.5, boss: { 4: "Iron Colonel", 6: "The Mammoth" } },
 };
 
 // Bosses are balanced for a squad, so a solo run sees more of their health bar.
-export const BOSS_SOLO_HP = 3;
+export const BOSS_SOLO_HP = 2.4;
 
 // The push-your-luck hook: the chopper comes after these waves, and waiting pays more.
 export const GREED: Record<number, number> = { 2: 1, 4: 1.5, 6: 2 };

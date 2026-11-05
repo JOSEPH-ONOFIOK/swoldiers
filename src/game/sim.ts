@@ -20,10 +20,11 @@ export type Input = {
   assist: boolean; // touch aiming pulls toward the nearest enemy along the stick
 };
 
+export type Role = "hunter" | "flanker" | "patient";
 export type Foe = {
   id: number; data: EnemyData; kind: Kind; x: number; y: number; hp: number; maxHp: number;
   cd: number; aim: number; flash: number; dir: number; walk: number;
-  sideT: number; sideS: number; back: number; lastX: number; lastY: number; checkT: number; called: boolean;
+  role: Role; awake: boolean; waited: number; back: number; called: boolean;
 };
 export type Shot = { x: number; y: number; vx: number; vy: number; t: number; dmg: number; mine: boolean; over: boolean; splash: number; flame: boolean };
 export type Loot = { x: number; y: number; v: number; t: number };
@@ -47,6 +48,9 @@ export type Hud = {
 
 const WAVE_SIZE = (wave: number) => 3 + 4.4 * wave;
 const BITE_RETREAT = 0.55;
+const ROLES: Role[] = ["hunter", "flanker", "patient", "hunter", "flanker"];
+const PATIENT_RING = 150; // how far off a patient enemy waits
+const PATIENT_WAIT = 14; // seconds before it stops waiting anyway
 
 const THROW: Record<string, { range: number; r: number }> = { "3": { range: 170, r: 42 }, "5": { range: 240, r: 30 } };
 const BOMB_AHEAD = 100; // how far a bomb lands when nobody is in front of you
@@ -92,6 +96,15 @@ export class Run {
   blobs: { c: number; r: number; w: number; h: number }[] = [];
   events: GameEvent[] = [];
   private nextId = 1;
+  private spawned = 0;
+  private headX = 1; // the way the player is heading
+  private headY = 0;
+  private roomy = new Uint8Array(COLS * ROWS); // 1 where something wide can stand
+  private huntField = new Int16Array(COLS * ROWS);
+  private wideField = new Int16Array(COLS * ROWS);
+  private aheadField = new Int16Array(COLS * ROWS);
+  private ahead = { x: 0, y: 0 };
+  private pathT = 0;
 
   constructor(frontId: string, save: Save, seed = Date.now()) {
     this.front = COMBAT_FRONTS.find((f) => f.id === frontId) ?? COMBAT_FRONTS[0];
@@ -106,6 +119,7 @@ export class Run {
     this.rollCd = 1.6 * 0.95 ** agi;
     this.ammo = this.rifle.mag;
     this.buildMap();
+    this.buildPaths();
     this.startWave();
   }
 
@@ -148,6 +162,94 @@ export class Run {
     const d = Math.hypot(bx - ax, by - ay), n = Math.ceil(d / 8);
     for (let i = 1; i < n; i++) if (this.solid(ax + ((bx - ax) * i) / n, ay + ((by - ay) * i) / n)) return false;
     return true;
+  }
+
+  // ---------- finding a way ----------
+  private cell(x: number, y: number) {
+    const c = Math.max(0, Math.min(COLS - 1, Math.floor(x / WORLD.cell)));
+    const r = Math.max(0, Math.min(ROWS - 1, Math.floor(y / WORLD.cell)));
+    return r * COLS + c;
+  }
+
+  private buildPaths() {
+    for (let r = 0; r < ROWS; r++)
+      for (let c = 0; c < COLS; c++) {
+        let wide = 1;
+        for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) if (this.grid[Math.max(0, Math.min(ROWS - 1, r + a)) * COLS + Math.max(0, Math.min(COLS - 1, c + b))]) wide = 0;
+        this.roomy[r * COLS + c] = wide;
+      }
+    this.refreshPaths();
+  }
+
+  // Steps from every cell to `seed`. One sweep serves every enemy with that target.
+  private sweep(field: Int16Array, seed: number, open: (i: number) => boolean) {
+    field.fill(-1);
+    field[seed] = 0;
+    const queue = new Int32Array(COLS * ROWS);
+    let head = 0, tail = 0;
+    queue[tail++] = seed;
+    while (head < tail) {
+      const i = queue[head++], c = i % COLS, step = field[i] + 1;
+      const next = [c > 0 ? i - 1 : -1, c < COLS - 1 ? i + 1 : -1, i - COLS, i + COLS];
+      for (const n of next)
+        if (n >= 0 && n < field.length && field[n] < 0 && open(n)) {
+          field[n] = step;
+          queue[tail++] = n;
+        }
+    }
+  }
+
+  private refreshPaths() {
+    const dist = 96; // a few steps in front of the player
+    this.ahead = {
+      x: Math.max(24, Math.min(WORLD.w - 24, this.x + this.headX * dist)),
+      y: Math.max(24, Math.min(WORLD.h - 24, this.y + this.headY * dist)),
+    };
+    const walk = (i: number) => this.grid[i] === 0, wide = (i: number) => this.roomy[i] === 1;
+    this.sweep(this.huntField, this.cell(this.x, this.y), walk);
+    this.sweep(this.wideField, this.cell(this.x, this.y), wide);
+    this.sweep(this.aheadField, this.cell(this.ahead.x, this.ahead.y), walk);
+  }
+
+  private fieldFor(k: Kind) {
+    return k.r > 7 ? this.wideField : this.huntField;
+  }
+
+  private reachable(x: number, y: number, k: Kind) {
+    return k.flies || this.fieldFor(k)[this.cell(x, y)] >= 0;
+  }
+
+  // The next step down the field. Corners can't be cut, so nothing clips a building.
+  private stepAlong(field: Int16Array, f: Foe, tx: number, ty: number) {
+    const i = this.cell(f.x, f.y), c = i % COLS, r = Math.floor(i / COLS);
+    let best = field[i] < 0 ? 32767 : field[i], bx = -1, by = -1;
+    for (let a = -1; a <= 1; a++)
+      for (let b = -1; b <= 1; b++) {
+        const nc = c + b, nr = r + a;
+        if ((!a && !b) || nc < 0 || nr < 0 || nc >= COLS || nr >= ROWS) continue;
+        const v = field[nr * COLS + nc];
+        if (v < 0 || v >= best) continue;
+        if (a && b && (field[r * COLS + nc] < 0 || field[nr * COLS + c] < 0)) continue;
+        best = v;
+        bx = (nc + 0.5) * WORLD.cell;
+        by = (nr + 0.5) * WORLD.cell;
+      }
+    const gx = bx < 0 ? tx : bx, gy = bx < 0 ? ty : by;
+    const d = Math.hypot(gx - f.x, gy - f.y) || 1;
+    return [(gx - f.x) / d, (gy - f.y) / d];
+  }
+
+  private wakeNearest() {
+    let best: Foe | null = null, bestD = 1e9;
+    for (const f of this.foes)
+      if (!f.awake && f.hp > 0) {
+        const d = Math.hypot(f.x - this.x, f.y - this.y);
+        if (d < bestD) {
+          bestD = d;
+          best = f;
+        }
+      }
+    if (best) best.awake = true;
   }
 
   // ---------- waves ----------
@@ -213,13 +315,16 @@ export class Run {
       const a = this.rand() * Math.PI * 2, d = near ? 40 + this.rand() * 30 : 230 + this.rand() * 90;
       x = (near ?? this).x + Math.cos(a) * d;
       y = (near ?? this).y + Math.sin(a) * d;
-      if (x > 20 && y > 20 && x < WORLD.w - 20 && y < WORLD.h - 20 && !this.blocked(x, y, kind.r)) break;
+      if (x > 20 && y > 20 && x < WORLD.w - 20 && y < WORLD.h - 20 && !this.blocked(x, y, kind.r) && this.reachable(x, y, kind)) break;
     }
     if (this.blocked(x, y, kind.r)) ({ x, y } = { x: WORLD.w / 2, y: 30 });
     const hp = data.hp * this.scale(0.1) * (data.boss ? BOSS_SOLO_HP : 1);
+    // Heavy units and snipers each have one job, so only the rank and file get roles.
+    const plain = !data.boss && !kind.armored && kind.attack !== "snipe";
+    const role = plain ? ROLES[this.spawned++ % ROLES.length] : "hunter";
     this.foes.push({
       id: this.nextId++, data, kind, x, y, hp, maxHp: hp, cd: 0.5 + this.rand() * kind.cd, aim: 0, flash: 0, dir: 0, walk: 0,
-      sideT: 0, sideS: 1, back: 0, lastX: x, lastY: y, checkT: 0.5, called: false,
+      role, awake: role !== "patient", waited: 0, back: 0, called: false,
     });
   }
 
@@ -246,6 +351,7 @@ export class Run {
     if (f.kind.armored && !explosive) d *= 0.25;
     f.hp -= d;
     f.flash = 0.08;
+    f.awake = true;
     if (crit) {
       this.pops.push({ x: f.x, y: f.y - 12, text: "CRIT", c: "#f4c430", t: 0.5 });
       this.shake = Math.max(this.shake, 2);
@@ -262,6 +368,7 @@ export class Run {
 
   private killed(f: Foe) {
     this.kills++;
+    this.wakeNearest();
     this.events.push("kill");
     this.burst(f.x, f.y, f.data.boss ? 40 : 9, f.kind.armored ? "#f4c430" : "#a8321f");
     const worth = Math.max(1, Math.round(f.data.xp * 0.5));
@@ -427,6 +534,8 @@ export class Run {
       const sp = this.speed * (inp.sprint ? 1.35 : 1) * dt;
       this.move(this, mx * sp, my * sp, 5);
       if (m > 0.1) {
+        this.headX = mx / (m > 1 ? 1 : m);
+        this.headY = my / (m > 1 ? 1 : m);
         const was = Math.floor(this.walk / 2);
         this.walk += dt * 10;
         if (Math.floor(this.walk / 2) !== was) this.smoke(this.x, this.y + 4, 1, 2.5, "#a8987088", 0.35);
@@ -461,6 +570,12 @@ export class Run {
 
   private stepFoes(dt: number) {
     const foes = this.foes;
+    this.pathT -= dt;
+    if (this.pathT <= 0) {
+      this.pathT = 0.2;
+      this.refreshPaths();
+    }
+    if (foes.length && !foes.some((f) => f.awake)) this.wakeNearest();
     for (const f of foes) {
       f.cd -= dt;
       f.flash -= dt;
@@ -468,45 +583,44 @@ export class Run {
       const k = f.kind;
       const clear = k.flies || (d < k.range + 40 && this.sees(f.x, f.y, this.x, this.y));
       const inRange = k.range > 0 && d < k.range && clear;
-      f.dir = Math.atan2(dy, dx);
 
-      let vx = dx / d, vy = dy / d;
+      // Where this enemy wants to be. Flankers cut the player off, then close in.
+      const flanking = f.role === "flanker" && d > 56 && !k.flies;
+      const tx = flanking ? this.ahead.x : this.x, ty = flanking ? this.ahead.y : this.y;
+      const field = flanking ? this.aheadField : this.fieldFor(k);
+      const dt2 = Math.hypot(tx - f.x, ty - f.y) || 1;
+      let vx = (tx - f.x) / dt2, vy = (ty - f.y) / dt2;
+      if (!k.flies && !(dt2 < 130 && k.r <= 7 && this.sees(f.x, f.y, tx, ty))) [vx, vy] = this.stepAlong(field, f, tx, ty);
+      f.dir = inRange || d < 70 ? Math.atan2(dy, dx) : Math.atan2(vy, vx);
+
       const hold = k.attack === "snipe" ? d < 200 : k.attack === "melee" ? false : d < k.range * 0.7;
       const ramp = k.attack === "melee" ? SPEED_RAMP.melee : SPEED_RAMP.other;
       let speed = k.speed * (1 + ramp * Math.min(this.wave - 1, LAST_WAVE - 1));
       if (inRange && hold) speed = 0;
+      if (!f.awake) {
+        // Waits at a distance. Another death sends it in; time and being shot do too.
+        f.waited += dt;
+        if (f.waited > PATIENT_WAIT) f.awake = true;
+        else if (this.fieldFor(k)[this.cell(f.x, f.y)] * WORLD.cell <= PATIENT_RING && d < PATIENT_RING + 40) speed = 0;
+      }
       if (k.attack === "melee") {
         // Biters lunge, then break off, and never stand inside the player.
         f.back -= dt;
         if (f.back > 0) {
-          vx = -vx;
-          vy = -vy;
+          vx = -dx / d;
+          vy = -dy / d;
         } else if (d < k.r + 7) {
           speed = 0;
         }
       }
       if (k.attack === "snipe" && d < 90) {
         // snipers keep their distance
-        vx = -vx;
-        vy = -vy;
+        vx = -dx / d;
+        vy = -dy / d;
         speed = k.speed;
       }
       if (f.aim > 0) speed = 0;
 
-      f.checkT -= dt;
-      if (f.checkT <= 0) {
-        if (speed > 0 && !k.flies && Math.hypot(f.x - f.lastX, f.y - f.lastY) < 4) {
-          f.sideT = 0.7;
-          f.sideS = this.rand() < 0.5 ? 1 : -1;
-        }
-        f.lastX = f.x;
-        f.lastY = f.y;
-        f.checkT = 0.5;
-      }
-      if (f.sideT > 0) {
-        f.sideT -= dt;
-        [vx, vy] = [-vy * f.sideS, vx * f.sideS];
-      }
       if (k.flies) {
         f.x += vx * speed * dt;
         f.y += vy * speed * dt;

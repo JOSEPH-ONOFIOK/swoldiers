@@ -189,24 +189,59 @@ const LOOKS: Record<string, Look> = {
 };
 
 // ---------- machines and animals ----------
+// A side-on mutt at a run: deep chest, tucked waist, four legs, raised tail, long muzzle.
 const dog = (frame: number) =>
-  art(38, 22, (g) => {
-    const c = "#7c5a38", dark = "#5a4028";
-    const front = [4, 0, -4, 0][frame], rear = [-4, 0, 4, 0][frame], arch = frame % 2 ? -1 : 0;
-    rect(g, 6 + rear, 13, 3, 8, dark);
-    rect(g, 22 - front, 13, 3, 8, dark);
-    poly(g, [[2, 7], [5, 9], [4, 11]], c);
-    oval(g, 12, 10 + arch, 8, 5.2, c);
-    oval(g, 21, 9 + arch, 7, 5.6, c);
-    oval(g, 16, 13 + arch, 8, 2.2, "#a88a5e");
-    rect(g, 10 + rear, 13, 3, 8, c);
-    rect(g, 26 - front, 13, 3, 8, c);
-    oval(g, 29, 6 + arch, 4.6, 4, c);
-    poly(g, [[31, 4 + arch], [37, 6 + arch], [37, 9 + arch], [31, 9 + arch]], "#6a4c30");
-    rect(g, 36, 6.4 + arch, 1.4, 1.4, "#14100c");
-    poly(g, [[25, 3 + arch], [27, -1 + arch], [29, 3 + arch]], dark);
-    rect(g, 30, 4.6 + arch, 1.4, 1.4, "#d9472b");
-    rect(g, 32, 9 + arch, 4, 1, "#ece4cc");
+  art(52, 34, (g) => {
+    const coat = "#8a6238", dark = "#5f4226", belly = "#c2a06c", nose = "#14100c";
+    const stride = [7, 3, -7, -3][frame], lift = frame % 2 ? -1 : 0;
+    const leg = (hip: number, y: number, swing: number, c: string) => {
+      g.strokeStyle = c;
+      g.lineCap = "round";
+      g.lineJoin = "round";
+      g.lineWidth = 3.4;
+      g.beginPath();
+      g.moveTo(hip, y);
+      g.lineTo(hip + swing * 0.55, y + 7);
+      g.lineTo(hip + swing, y + 13);
+      g.stroke();
+      rect(g, hip + swing - 1.5, y + 12, 4.5, 2.4, dark);
+    };
+    // far legs, in shadow
+    leg(16, 18 + lift, -stride, dark);
+    leg(33, 18 + lift, stride, dark);
+    // tail, up and curved
+    g.strokeStyle = coat;
+    g.lineCap = "round";
+    g.lineWidth = 3.2;
+    g.beginPath();
+    g.moveTo(9, 13 + lift);
+    g.quadraticCurveTo(2, 11 + lift, 3, 3 + lift);
+    g.stroke();
+    // body: hips, tucked waist, deep chest
+    oval(g, 14, 15 + lift, 7.5, 6.5, coat);
+    oval(g, 25, 14 + lift, 9, 5.2, coat);
+    oval(g, 33, 15 + lift, 8, 8, coat);
+    oval(g, 33, 20 + lift, 5.5, 3.4, belly);
+    g.strokeStyle = dark;
+    g.lineWidth = 1.2;
+    g.beginPath();
+    g.moveTo(11, 10 + lift);
+    g.quadraticCurveTo(24, 7.5 + lift, 34, 9 + lift);
+    g.stroke();
+    // near legs
+    leg(14, 18 + lift, stride, coat);
+    leg(35, 19 + lift, -stride, coat);
+    // neck and head
+    poly(g, [[31, 13 + lift], [37, 5 + lift], [43, 8 + lift], [40, 18 + lift]], coat);
+    oval(g, 41, 7 + lift, 5.4, 4.6, coat);
+    // muzzle and open jaw
+    poly(g, [[43, 5 + lift], [51, 7 + lift], [51, 10 + lift], [43, 10.5 + lift]], belly);
+    poly(g, [[43, 11 + lift], [49, 12.5 + lift], [43, 13.5 + lift]], "#7a2a20");
+    rect(g, 49.5, 6.5 + lift, 2.5, 2.2, nose);
+    rect(g, 47, 10.2 + lift, 1, 1.4, "#ece4cc");
+    // pointed ear and eye
+    poly(g, [[36, 5 + lift], [37.5, -1 + lift], [41, 3.5 + lift]], dark);
+    rect(g, 42.5, 5 + lift, 1.6, 1.6, "#d9472b");
   });
 
 const drone = () =>
@@ -736,12 +771,12 @@ function drawFoe(x: G, run: Run, f: Foe) {
     const spin = Math.abs(Math.sin(run.time * 40 + f.id));
     for (const o of [-6.5, 6.5]) x.fillRect(f.x + o - 3.5 * spin, f.y - up - 4, 7 * spin + 1, 0.8);
   } else if (k === "dog") {
-    shadow(x, f.x, f.y + 3, 17);
+    shadow(x, f.x, f.y + 3, 22);
     x.save();
     x.translate(f.x, f.y);
     if (Math.cos(f.dir) < 0) x.scale(-1, 1);
     const frame = Math.floor(f.walk) & 3;
-    x.drawImage(hit ? p.dogHit[frame] : p.dog[frame], -10, -8, 20, 12);
+    x.drawImage(hit ? p.dogHit[frame] : p.dog[frame], -13, -13, 27, 17.6);
     x.restore();
   } else if (k === "tank" || k === "mammoth") {
     const big = k === "mammoth" ? 1.7 : 1, w = 30 * big, h = 19 * big;
