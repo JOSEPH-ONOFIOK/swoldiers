@@ -989,12 +989,14 @@ export function draw(x: G, run: Run, world: World, vw: number, vh: number, font:
           x.globalCompositeOperation = "source-over";
         }
         const a = run.dir, back = Math.sin(a) < -0.45, rolling = run.rollT > 0;
+        if (run.safeT > 0 && Math.floor(run.time * 12) % 2) x.globalAlpha = 0.45;
         if (back && !rolling) held(x, p.rifle, run.x, run.y - 8, a, 13);
         person(x, "player", run.x, run.y, a, run.walk, run.hurt > 0, rolling ? run.time * 26 : 0);
         if (!back && !rolling) {
           held(x, p.rifle, run.x, run.y - 7, a, 13);
           arm(x, run.x, run.y - 8.5, a, LOOKS.player.skin);
         }
+        x.globalAlpha = 1;
       },
     });
   items.sort((a, b) => a.y - b.y).forEach((i) => i.go());

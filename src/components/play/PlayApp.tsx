@@ -77,7 +77,7 @@ export function PlayApp() {
   return (
     <>
       {view.at === "title" ? <Title onStart={toBase} /> : null}
-      {view.at === "run" ? <Battle key={view.id} frontId={view.frontId} save={save} quick={view.quick} onEnd={onEnd} onRestart={() => deploy(view.frontId, true)} onQuit={toBase} /> : null}
+      {view.at === "run" ? <Battle key={view.id} frontId={view.frontId} save={save} quick={view.quick} invite={invite} onEnd={onEnd} onRestart={() => deploy(view.frontId, true)} onQuit={toBase} /> : null}
       {view.at === "result" ? <Results result={view.result} unlocked={view.unlocked} best={save.best} invite={invite} onAgain={() => deploy(view.result.frontId, true)} onBase={toBase} /> : null}
       {view.at === "base" ? <Base save={save} commit={commit} front={front} setFront={setFront} deploy={deploy} /> : null}
       {wipe ? <Wipe key={wipe} /> : null}

@@ -44,6 +44,8 @@ export const FIRST_WAVE = 5; // enemies in wave 1 on every front
 export const SPEED_RAMP = { melee: 0.11, other: 0.04 };
 
 export const RELOAD_TIME = 0.8; // seconds, before Agility
+export const REVIVE_HEALTH = 0.5; // share of max health after the extra life
+export const REVIVE_SAFE = 2.5; // seconds nothing can hit you after it
 export const PILL_EVERY = 2; // a health pill after this many waves
 export const PILL_HEAL = 0.3; // share of max health
 

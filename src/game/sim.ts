@@ -1,7 +1,7 @@
 // The run itself: no canvas, no DOM, so it can also be driven by a test bot.
 import { ENEMIES, FRONTS, SKILLS, type Enemy as EnemyData, type Front } from "../lib/game";
 import {
-  BOSS_SOLO_HP, CHOPPER_INBOUND, CHOPPER_LANDED, EXTRACT_TIME, FIRST_WAVE, GREED, KINDS, LAST_WAVE, LZ_RADIUS, PILL_EVERY, PILL_HEAL, PLATES, RELOAD_TIME, RIFLES, ROSTERS, SPEED_RAMP, WAVE_TIME, WORLD,
+  BOSS_SOLO_HP, CHOPPER_INBOUND, CHOPPER_LANDED, EXTRACT_TIME, FIRST_WAVE, GREED, KINDS, LAST_WAVE, LZ_RADIUS, PILL_EVERY, PILL_HEAL, PLATES, RELOAD_TIME, REVIVE_HEALTH, REVIVE_SAFE, RIFLES, ROSTERS, SPEED_RAMP, WAVE_TIME, WORLD,
   type Kind, type Save,
 } from "./tuning";
 
@@ -90,6 +90,7 @@ export class Run {
   carried = 0; kills = 0; bannerText = ""; bannerT = 0;
   chopper: Chopper | null = null;
   result: Result | null = null; deadT = 0;
+  down = false; lifeUsed = false; safeT = 0; // the one extra life
 
   foes: Foe[] = []; shots: Shot[] = []; loot: Loot[] = []; pills: Pill[] = []; crates: Crate[] = []; blasts: Blast[] = []; fires: Fire[] = [];
   sparks: Spark[] = []; pops: Pop[] = []; puffs: Puff[] = []; decals: Decal[] = []; flash = 0; shotFlash = 0; lightT = 0;
@@ -420,7 +421,7 @@ export class Run {
   }
 
   private damage(d: number) {
-    if (this.rollT > 0 || this.result || this.hp <= 0) return;
+    if (this.rollT > 0 || this.safeT > 0 || this.result || this.hp <= 0) return;
     this.hp -= d * (1 - this.armor);
     this.hurt = 0.14;
     this.shake = Math.max(this.shake, 3);
@@ -430,7 +431,7 @@ export class Run {
       this.deadT = 1;
       this.burst(this.x, this.y, 30, "#a8321f");
       this.events.push("dead");
-      this.banner(`${this.carried} SCRAP LOST`, 3);
+      if (this.lifeUsed) this.banner(`${this.carried} SCRAP LOST`, 3);
     }
   }
 
@@ -821,8 +822,30 @@ export class Run {
     };
   }
 
+  /** The one extra life of a run: back on your feet with half health and a moment of cover. */
+  revive() {
+    if (!this.down || this.lifeUsed) return;
+    this.down = false;
+    this.lifeUsed = true;
+    this.hp = this.maxHp * REVIVE_HEALTH;
+    this.safeT = REVIVE_SAFE;
+    this.burn = 0;
+    this.shake = 5;
+    this.smoke(this.x, this.y + 3, 9, 9, "#8a7a58", 0.8);
+    this.pops.push({ x: this.x, y: this.y - 16, text: "BACK IN", c: "#9bc53d", t: 1.2 });
+    this.events.push("heal");
+    for (const f of this.foes) if (f.kind.attack === "melee") f.back = 1;
+  }
+
+  giveUp() {
+    if (!this.down) return;
+    this.down = false;
+    this.finish("died", 0);
+  }
+
   step(dt: number, inp: Input) {
-    if (this.result) return;
+    if (this.result || this.down) return;
+    this.safeT = Math.max(0, this.safeT - dt);
     this.time += dt;
     this.shake = Math.max(0, this.shake - dt * 16);
     this.hurt -= dt;
@@ -831,7 +854,10 @@ export class Run {
 
     if (this.deadT > 0) {
       this.deadT -= dt;
-      if (this.deadT <= 0) this.finish("died", 0);
+      if (this.deadT <= 0) {
+        if (this.lifeUsed) this.finish("died", 0);
+        else this.down = true;
+      }
     } else {
       this.stepPlayer(dt, inp);
       this.stepChopper(dt);

@@ -6,9 +6,9 @@ import { D, DROP, draw, paintWorld } from "@/game/render";
 import { COMBAT_FRONTS, Run, type Hud, type Input, type Result } from "@/game/sim";
 import { GREED, type Save } from "@/game/tuning";
 import { Flyover } from "./Intro";
-import { Briefing, HOTBAR, MenuScreen, PauseScreen, skipsBriefing } from "./Overlays";
+import { Briefing, ExtraLife, HOTBAR, MenuScreen, PauseScreen, skipsBriefing } from "./Overlays";
 
-type Mode = "fly" | "brief" | "drop" | "play" | "pause" | "menu";
+type Mode = "fly" | "brief" | "drop" | "play" | "pause" | "menu" | "down";
 type Stick = { x0: number; y0: number; x: number; y: number };
 const KEYS: Record<string, [number, number]> = { KeyW: [0, -1], ArrowUp: [0, -1], KeyS: [0, 1], ArrowDown: [0, 1], KeyA: [-1, 0], ArrowLeft: [-1, 0], KeyD: [1, 0], ArrowRight: [1, 0] };
 const STEP = 1 / 60;
@@ -35,11 +35,12 @@ function Hold({ label, className, onHold, onTouch, children }: { label: string; 
   );
 }
 
-export function Battle({ frontId, save, quick, onEnd, onRestart, onQuit }: { frontId: string; save: Save; quick?: boolean; onEnd: (r: Result) => void; onRestart: () => void; onQuit: () => void }) {
+export function Battle({ frontId, save, quick, invite, onEnd, onRestart, onQuit }: { frontId: string; save: Save; quick?: boolean; invite: string | null; onEnd: (r: Result) => void; onRestart: () => void; onQuit: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const input = useRef<Input>({ moveX: 0, moveY: 0, aimX: 0, aimY: 0, fire: false, sprint: false, roll: false, reload: false, skills: new Set(), assist: false });
   const [mode, setModeState] = useState<Mode>(() => (!quick ? "fly" : skipsBriefing() ? "drop" : "brief"));
   const modeRef = useRef(mode); // read by the game loop and key handlers
+  const runRef = useRef<Run | null>(null);
   const [hud, setHud] = useState<Hud | null>(null);
   const [touch, setTouch] = useState(() => matchMedia("(pointer: coarse)").matches);
   const front = COMBAT_FRONTS.find((f) => f.id === frontId) ?? COMBAT_FRONTS[0];
@@ -57,6 +58,7 @@ export function Battle({ frontId, save, quick, onEnd, onRestart, onQuit }: { fro
     const el = canvas.current!;
     const x = el.getContext("2d")!;
     const run = new Run(frontId, save);
+    runRef.current = run;
     const world = paintWorld(run);
     const keys = new Set<string>();
     const inp = input.current;
@@ -101,7 +103,7 @@ export function Battle({ frontId, save, quick, onEnd, onRestart, onQuit }: { fro
         }
         return;
       }
-      if (now === "drop") return;
+      if (now === "drop" || now === "down") return;
       if (e.code === "Escape") return setMode(now === "play" ? "menu" : "play");
       if (e.code === "KeyP") return setMode(now === "play" ? "pause" : "play");
       if (e.code in KEYS) keys.add(e.code);
@@ -240,6 +242,10 @@ export function Battle({ frontId, save, quick, onEnd, onRestart, onQuit }: { fro
         hudT = 0.08;
         setHud(run.hud());
       }
+      if (run.down && modeRef.current === "play") {
+        setMode("down");
+        setHud(run.hud());
+      }
       if (run.result && !ended) {
         ended = true;
         onEnd(run.result);
@@ -349,6 +355,19 @@ export function Battle({ frontId, save, quick, onEnd, onRestart, onQuit }: { fro
       {mode === "fly" ? <Flyover front={front} onDone={afterFly} /> : null}
       {mode === "brief" ? <Briefing front={front} touch={touch} onStart={() => setMode("drop")} /> : null}
       {mode === "pause" ? <PauseScreen carried={hud?.carried ?? 0} onResume={() => setMode("play")} onMenu={() => setMode("menu")} /> : null}
+      {mode === "down" ? (
+        <ExtraLife
+          front={front}
+          carried={hud?.carried ?? 0}
+          wave={hud?.wave ?? 1}
+          invite={invite}
+          onRevive={() => {
+            runRef.current?.revive();
+            setMode("play");
+          }}
+          onGiveUp={() => runRef.current?.giveUp()}
+        />
+      ) : null}
       {mode === "menu" ? <MenuScreen front={front} hud={hud} save={save} touch={touch} onResume={() => setMode("play")} onRestart={onRestart} onQuit={onQuit} /> : null}
     </div>
   );

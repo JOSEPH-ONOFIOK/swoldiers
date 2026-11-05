@@ -1,12 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import type { IconType } from "react-icons";
-import { FaArrowRight, FaBomb, FaCoins, FaCompress, FaDumbbell, FaExpand, FaHandPointer, FaHelicopter, FaHouse, FaKeyboard, FaKitMedical, FaPlaneUp, FaPlay, FaRotateRight, FaSkull, FaVolumeHigh, FaVolumeXmark, FaXmark } from "react-icons/fa6";
+import { FaArrowRight, FaBomb, FaCoins, FaCompress, FaDumbbell, FaExpand, FaHandPointer, FaHeart, FaHelicopter, FaHouse, FaKeyboard, FaKitMedical, FaPlaneUp, FaPlay, FaRotateRight, FaSkull, FaVolumeHigh, FaVolumeXmark, FaXmark, FaXTwitter } from "react-icons/fa6";
 import { GiShotgun } from "react-icons/gi";
 import { sound } from "@/game/audio";
 import { GREED, PLATES, RIFLES, type Save } from "@/game/tuning";
 import type { Hud } from "@/game/sim";
 import { FrontArt } from "./Intro";
+import { CONFIG } from "@/lib/config";
 import { SKILLS, type Front } from "@/lib/game";
 
 const ICONS: Record<string, IconType> = { "2": GiShotgun, "3": FaBomb, "4": FaDumbbell, "5": FaPlaneUp, "6": FaKitMedical };
@@ -160,6 +161,39 @@ export function Briefing({ front, touch, onStart }: { front: Front; touch: boole
           Skip this next time
         </label>
         {touch ? null : <span className="font-pixel text-[10px] tracking-wider text-muted uppercase">Enter or Space to start</span>}
+      </div>
+    </Screen>
+  );
+}
+
+// One per run. X doesn't let a site confirm a post, so the button trusts the player.
+export function ExtraLife({ front, carried, wave, invite, onRevive, onGiveUp }: { front: Front; carried: number; wave: number; invite: string | null; onRevive: () => void; onGiveUp: () => void }) {
+  const [posted, setPosted] = useState(false);
+  const link = `${location.origin}/play${invite ? `?ref=${invite}` : ""}`;
+  const text = `Down on wave ${wave} in ${front.name} with ${carried} scrap. Using my extra life. @${CONFIG.xAccount} ${CONFIG.token.symbol}`;
+  const share = `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(link)}`;
+  return (
+    <Screen>
+      <div className="mx-auto max-w-sm text-center">
+        <FaHeart aria-hidden size={30} className="mx-auto text-red" />
+        <h2 className="mt-3 text-3xl">You are down</h2>
+        <p className="muted mt-2">
+          Post {CONFIG.token.symbol} on X for 1 extra life and keep your {carried} scrap. One per run.
+        </p>
+        <div className="mt-5 grid gap-2">
+          {posted ? (
+            <button className="btn" onClick={onRevive}>
+              <FaHeart aria-hidden size={12} /> Back to the fight
+            </button>
+          ) : (
+            <a className="btn" href={share} target="_blank" rel="noopener" onClick={() => setPosted(true)}>
+              <FaXTwitter aria-hidden size={13} /> Post for an extra life
+            </a>
+          )}
+          <button className="btn ghost" onClick={onGiveUp}>
+            Give up and lose {carried} scrap
+          </button>
+        </div>
       </div>
     </Screen>
   );
